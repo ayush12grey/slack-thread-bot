@@ -6,21 +6,19 @@ from dotenv import load_dotenv
 from flask import Flask, request, Response,make_response
 from slackeventsapi import SlackEventAdapter
 import json
-# import string
-# from datetime import datetime, timedelta
+
 import time
 
 load_dotenv()
 
+CLIENT_SIGNING_KEY = '176eae18545dcb12c6de51a0e6735475'
+BOT_AUTH_TOKEN = 'xoxb-4508841973635-4502380461302-4mdXD79X4jeEeCaysueIABVA'
 app = Flask(__name__)
 slack_event_adapter = SlackEventAdapter(
-    '176eae18545dcb12c6de51a0e6735475', '/slack/events', app)
+    CLIENT_SIGNING_KEY, '/slack/events', app)
 
-client = slack.WebClient(token='xoxb-4508841973635-4502380461302-4mdXD79X4jeEeCaysueIABVA')
-# client.chat_postMessage(
-#         channel="test-thread",
-#         text="Hello from your app! :tada:"
-#     )
+client = slack.WebClient(token= BOT_AUTH_TOKEN)
+
 BOT_ID = client.api_call("auth.test")['user_id']
 last_message_by_users = {}
 #
@@ -30,95 +28,8 @@ message_counts = {}
 welcome_messages = {}
 Question_and_Exclamation = ['?','!','Can','can', 'could','Could','Congrats','Congratulations']
 text_user = 'I detected multiple messages in a row in a short time. \nPlease edit them to use a single message instead. 💙 \nThis way, people can easily reply to the right one using threads. \nPlease use  ‘shift+enter/return’ for going to the next line. '
-#
-# BAD_WORDS = ['hmm', 'no', 'tim']
-#
-# SCHEDULED_MESSAGES = [
-#     {'text': 'First message', 'post_at': (
-#         datetime.now() + timedelta(seconds=20)).timestamp(), 'channel': 'C01BXQNT598'},
-#     {'text': 'Second Message!', 'post_at': (
-#         datetime.now() + timedelta(seconds=30)).timestamp(), 'channel': 'C01BXQNT598'}
-# ]
-#
-#
-class WelcomeMessage:
-
-   def __init__(self, channel):
-        self.channel = channel
-        self.icon_emoji = ':robot_face:'
-        self.timestamp = ''
-        self.completed = False
-
-   def get_message(self):
-        return {
-            'ts': self.timestamp,
-            'channel': self.channel,
-            'username': 'Welcome Robot!',
-            'icon_emoji': self.icon_emoji,
-            'blocks': [
-                self._get_reaction_task()
-            ]
-        }
-
-   def _get_reaction_task(self):
-
-        text = 'I detected multiple messages in a row in a short time. \nPlease edit them to use a single message instead. 💙 \nThis way, people can easily reply to the right one using threads.'
-
-        return {'type': 'section', 'text': {'type': 'mrkdwn', 'text': text}}
 
 
-def send_welcome_message(channel, user):
-    if channel not in welcome_messages:
-        welcome_messages[channel] = {}
-
-    if user in welcome_messages[channel]:
-        return
-
-    welcome = WelcomeMessage(channel)
-    message = welcome.get_message()
-    response = client.chat_postMessage(**message)
-    welcome.timestamp = response['ts']
-
-    welcome_messages[channel][user] = welcome
-
-#
-# def list_scheduled_messages(channel):
-#     response = client.chat_scheduledMessages_list(channel=channel)
-#     messages = response.data.get('scheduled_messages')
-#     ids = []
-#     for msg in messages:
-#         ids.append(msg.get('id'))
-#
-#     return ids
-#
-#
-# def schedule_messages(messages):
-#     ids = []
-#     for msg in messages:
-#         response = client.chat_scheduleMessage(
-#             channel=msg['channel'], text=msg['text'], post_at=msg['post_at']).data
-#         id_ = response.get('scheduled_message_id')
-#         ids.append(id_)
-#
-#     return ids
-#
-#
-# def delete_scheduled_messages(ids, channel):
-#     for _id in ids:
-#         try:
-#             client.chat_deleteScheduledMessage(
-#                 channel=channel, scheduled_message_id=_id)
-#         except Exception as e:
-#             print(e)
-#
-#
-# def check_if_bad_words(message):
-#     msg = message.lower()
-#     msg = msg.translate(str.maketrans('', '', string.punctuation))
-#
-#     return any(word in msg for word in BAD_WORDS)
-#
-#
 @ slack_event_adapter.on('message')
 def message(payload):
     event = payload.get('event', {})
@@ -126,8 +37,6 @@ def message(payload):
     user_id = event.get('user')
     text = event.get('text')
     timestamp = event.get('ts')
-    # if user_id not in users_allowed:
-    #     return " "
     is_bot = 'bot_id' in event
     isUserAllowed = user_id in users_allowed
     print(isUserAllowed)
@@ -141,8 +50,6 @@ def message(payload):
                 channel=channel_id, thread_ts=timestamp, text="[THREAD] ⬇️")
             Inquestion = True
             break
-
-    #print(f"Inthread is :{Inthread}")
 
     if isUserAllowed and user_id in last_message_by_users and not is_bot and not Inquestion and not Inthread:
         last_time_count = last_message_by_users[user_id]['timestamp']
@@ -171,10 +78,6 @@ def message(payload):
                                                   'lastwarned': timestamp}
         else:
             last_message_by_users[user_id]['timestamp'] = event.get('ts')
-
-
-
-
 
     else :
         if not Inthread and not Inquestion and not is_bot and isUserAllowed:
