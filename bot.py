@@ -10,8 +10,8 @@ import json
 
 load_dotenv()
 
-CLIENT_SIGNING_KEY = '176eae18545dcb12c6de51a0e6735475'
-BOT_AUTH_TOKEN = 'xoxb-4508841973635-4502380461302-4mdXD79X4jeEeCaysueIABVA'
+CLIENT_SIGNING_KEY =  os.getenv("SIGNING_SECRET_")
+BOT_AUTH_TOKEN = os.getenv('SLACK_TOKEN_')
 app = Flask(__name__)
 slack_event_adapter = SlackEventAdapter(
     CLIENT_SIGNING_KEY, '/slack/events', app)
