@@ -7,7 +7,6 @@ from flask import Flask, request, Response,make_response
 from slackeventsapi import SlackEventAdapter
 import json
 
-import time
 
 load_dotenv()
 
@@ -83,23 +82,6 @@ def message(payload):
         if not Inthread and not Inquestion and not is_bot and isUserAllowed:
             last_message_by_users[user_id] = {'timestamp':timestamp,'channelid':channel_id }
 
-
-    # print(last_message_by_users)
-    # print(timestamp)
-
-        # if user_id in message_counts:
-        #     message_counts[user_id] += 1
-        # else:
-        #     message_counts[user_id] = 1
-        #
-        # if text.lower() == 'start':
-        #     send_welcome_message(f'@{user_id}', user_id)
-        # elif check_if_bad_words(text):
-        #     ts = event.get('ts')
-        #     client.chat_postMessage(
-        #         channel=channel_id, thread_ts=ts, text="THAT IS A BAD WORD!")
-
-
 @ slack_event_adapter.on('reaction_added')
 def reaction(payload):
     event = payload.get('event', {})
@@ -114,30 +96,9 @@ def reaction(payload):
             channel=channel_id, thread_ts=thread_ts, text="A Friendly reminder : please consider deleting this message and responding in thread instead 💙")
 
 
-
-#
-# @ app.route('/message-count', methods=['POST'])
-# def message_count():
-#     data = request.form
-#     user_id = data.get('user_id')
-#     channel_id = data.get('channel_id')
-#     message_count = message_counts.get(user_id, 0)
-#
-#     client.chat_postMessage(
-#         channel=channel_id, text=f"Message: {message_count}")
-#     return Response(), 200
-#
-#
 @app.route("/shortcut", methods=['GET', 'POST'])
 def shortcuts():
     if request.method == 'POST':
-        # json_string = request.body()
-        # if json_string:
-        #     x = json.loads(json_string)
-        # else:
-        #     # Your code/logic here
-        #     x = {}
-
         json_value = json.loads(request.form['payload'])
         response_url = json_value['response_url']
         thread_ts = json_value['message']['ts']
@@ -152,24 +113,13 @@ def shortcuts():
         if response.status_code != 200:
             print(response.raw)
             print("unsuccessfull")
-
-        print(response_url)
-        print(thread_ts)
         return make_response("", 200)
 
-    return "True"
+    return ""
 
 @app.route("/command/thread-reminder", methods=['GET', 'POST'])
 def commands():
     if request.method == 'POST':
-        # json_string = request.body()
-        # if json_string:
-        #     x = json.loads(json_string)
-        # else:
-        #     # Your code/logic here
-        #     x = {}
-        #print(request.form)
-        #json_value = json.loads()
         response_url = request.form['response_url']
         # thread_ts = json_value['message']['ts']
         data_json ={
@@ -182,9 +132,7 @@ def commands():
         if response.status_code != 200:
             print(response.raw)
             print("unsuccessfull")
-
         print(response_url)
-        #print(thread_ts)
         return make_response("", 200)
 
     return "True"
