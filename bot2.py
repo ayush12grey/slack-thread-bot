@@ -8,11 +8,7 @@ load_dotenv()
 app = App(token=os.getenv("SLACK_TOKEN_"))
 
 last_message_by_users = {}
-#
-users_allowed =['U04FBHD3D3K']
-#users_allowed = []
-message_counts = {}
-welcome_messages = {}
+users_allowed = os.getenv("USERS_ALLOWED")
 Question_and_Exclamation = ['?','!','Can','can', 'could','Could','Congrats','Congratulations']
 text_user = 'I detected multiple messages in a row in a short time. \nPlease edit them to use a single message instead. 💙 \nThis way, people can easily reply to the right one using threads. \nPlease use  ‘shift+enter/return’ for going to the next line. '
 
@@ -77,7 +73,7 @@ def handle_message_events(body, client, say):
     thread_ts = event.get('item', {}).get('ts')
     type = event.get('item', {}).get('type')
     user_id = event.get('user')
-    print(event)
+
     if type == 'message' and reaction_type == 'speak_no_evil':
         client.chat_postMessage(
             channel=channel_id, thread_ts=thread_ts,
@@ -107,7 +103,6 @@ def thread_reminder_command(ack, respond, command):
     if response.status_code != 200:
         print(response.raw)
         print("unsuccessfull")
-    print(response_url)
     respond('')
 
 if __name__ == "__main__":
