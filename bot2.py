@@ -3,7 +3,9 @@ import re
 from dotenv import load_dotenv
 from slack_bolt import App
 from slack_bolt.adapter.google_cloud_functions import SlackRequestHandler
-from flask import Flask, request
+from flask import Flask, Request,request
+import requests
+
 load_dotenv()
 app = App(process_before_response=True)
 
