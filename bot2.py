@@ -2,14 +2,14 @@ import os
 import re
 from dotenv import load_dotenv
 from slack_bolt import App
-from slack_bolt.adapter.socket_mode import SocketModeHandler
-import requests
+from slack_bolt.adapter.google_cloud_functions import SlackRequestHandler
+from flask import Flask, request
 load_dotenv()
-app = App(token=os.getenv("SLACK_TOKEN_"))
+app = App(process_before_response=True)
 
 last_message_by_users = {}
-users_allowed = os.getenv("USERS_ALLOWED")
-Question_and_Exclamation = ['?','!','Can','can', 'could','Could','Congrats','Congratulations']
+users_allowed = ['U04FBHD3D3K']
+Question_and_Exclamation = ['?','!','Can','can', 'could','Could','Congrats','Congratulations','What','what']
 text_user = 'I detected multiple messages in a row in a short time. \nPlease edit them to use a single message instead. 💙 \nThis way, people can easily reply to the right one using threads. \nPlease use  ‘shift+enter/return’ for going to the next line. '
 
 @app.event("message")
@@ -88,7 +88,7 @@ def open_thread(ack, shortcut, client):
         channel=channel_id, thread_ts=thread_ts,
         text="[THREAD] ⬇️")
 
-
+handler = SlackRequestHandler(app)
 @app.command("/thread-reminder")
 def thread_reminder_command(ack, respond, command):
     ack()
@@ -104,7 +104,27 @@ def thread_reminder_command(ack, respond, command):
         print(response.raw)
         print("unsuccessfull")
     respond('')
-
+# Cloud Function
+def thread_bolt_app(req: Request):
+    """HTTP Cloud Function.
+    Args:
+        req (flask.Request): The request object.
+        <https://flask.palletsprojects.com/en/1.1.x/api/#incoming-request-data>
+    Returns:
+        The response text, or any set of values that can be turned into a
+        Response object using `make_response`
+        <https://flask.palletsprojects.com/en/1.1.x/api/#flask.make_response>.
+    """
+    return handler.handle(req)
 if __name__ == "__main__":
-    handler = SocketModeHandler(app, os.getenv("APP_TOKEN"))
-    handler.start()
+    flask_app = Flask(__name__)
+
+
+    @flask_app.route("/function", methods=["GET", "POST"])
+    def handle_anything():
+        return handler.handle(request)
+
+
+    flask_app.run(port=3000)
+
+
